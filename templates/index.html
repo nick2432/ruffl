@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruffle SWF Uploader & Player</title>
+    <script src="{% static 'ruffle/ruffle.js' %}"></script>
+</head>
+<body>
+    <input type="file" id="fileInput" accept=".swf">
+    <div id="container"></div>
+
+    <script>
+        window.addEventListener("load", (event) => {
+            const container = document.getElementById("container");
+            const fileInput = document.getElementById("fileInput");
+
+            fileInput.addEventListener("change", function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const ruffle = window.RufflePlayer.newest();
+                const player = ruffle.createPlayer();
+                
+                player.addEventListener("loadedmetadata", () => {
+                    console.log("Ruffle metadata loaded");
+                    console.log("Movie width:", player.metadata.width);
+                    console.log("Movie height:", player.metadata.height);
+                    console.log("Frame rate:", player.metadata.frameRate);
+                    console.log("Number of frames:", player.metadata.numFrames);
+                });
+
+                player.addEventListener("loadeddata", () => {
+                    console.log("Ruffle movie fully loaded");
+                });
+
+                player.addEventListener("error", (error) => {
+                    console.error("Ruffle failed to load the file:", error);
+                });
+
+                container.innerHTML = ""; // Clear previous content
+                container.appendChild(player);
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    player.load({
+                        data: new Uint8Array(event.target.result),
+                        allowScriptAccess: false
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        });
+    </script>
+</body>
+</html>
